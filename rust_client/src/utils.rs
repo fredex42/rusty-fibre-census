@@ -3,7 +3,7 @@ use std::process::Command;
 use std::process::Output;
 use regex::Regex;
 use std::str;
-use std::array::IntoIter;
+use std::vec::IntoIter;
 use std::iter::FromIterator;
 
 use crate::superxtractor;
@@ -72,20 +72,20 @@ pub fn get_ip_addresses() -> Vec<String> {
 pub fn get_hw_info() -> Option<HwInfo> {
     let response = sysprofiler("SPHardwareDataType");
 
-    let the_knowledge = IntoIter::new([
+    let the_knowledge = vec![
         ("model", Regex::new(r"^\s+Model Name: (.*)\s*$").unwrap()),
         ("hw_uuid", Regex::new(r"^\s+Hardware UUID: (.*)\s*$").unwrap()),
         ("chip", Regex::new(r"^\s+Chip: (.*)\s*$").unwrap()),
-    ]);
+    ].into_iter();
     
-    let XT:SuperXtractor = SuperXtractor::new(HashMap::from_iter(the_knowledge));
+    let xt:SuperXtractor = SuperXtractor::new(the_knowledge);
     match String::from_utf8(response.stdout) {
         Err(err)=>{
             println!("ERROR Could not decode system_profiler response as UTF-8: {}", err);
             return None
         }
         Ok(output)=>{
-            let result = XT.execute_by_line(output);
+            let result = xt.execute_by_line(output);
             return HwInfo::new(result);
         }
     }
