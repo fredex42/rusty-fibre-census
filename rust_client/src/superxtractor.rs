@@ -30,18 +30,21 @@ impl<'a> SuperXtractor<'_>  {
         return SuperXtractor::new_from_hash(HashMap::from_iter(refs));
     }
 
+    /**
+     * Creates a new SuperXtrqactor based on a Hashmap of field-regex pairs.
+     * Ownership of the hashmap is taken by the SuperXtractor object
+     */
     pub fn new_from_hash(refs: HashMap<&str, Regex>) -> SuperXtractor {
         return SuperXtractor {
-            refs: refs.clone(),
+            refs,
         }
     }
 
     fn try_matches(&self, on: &str) -> Option<Match> {
         for (id, r) in &self.refs {
-            let captures = r.captures_len();
             return match r.captures(on) {
                 Some(m)=> {
-                    let (text, groups):(&str, [&str; 1]) = m.extract();
+                    let (_, groups):(&str, [&str; 1]) = m.extract();
                     Some(Match {
                         field: id.to_string(),
                         text: groups[0].to_string()
@@ -54,12 +57,14 @@ impl<'a> SuperXtractor<'_>  {
     }
 
     /**
-     * Runs the given SuperXtractor across a block of text, as given by the String parameter
+     * Runs the given SuperXtractor across a block of text, as given by the String parameter.
+     * This is given as an immutable reference and can therefore be a ref to String, a static str, a slice.....
+     * Returns a Vector of superxtractor::Match objects.
      */
-    pub fn execute_by_line(&self, on: String) -> Vec<Match> {
+    pub fn execute_by_line(&self, on: &str) -> Vec<Match> {
         let mut results:Vec<Match> = Vec::new();
 
-        for line in str::split(&on, "\n") {
+        for line in str::split(on, "\n") {
             match self.try_matches(line) {
                 Some(m)=> {
                     results.push(m);
@@ -104,7 +109,7 @@ mod tests {
           Provisioning UDID: AnotherFakeUUID
           Activation Lock Status: Secret".to_string();
 
-        let result = xt.execute_by_line(test_content);
+        let result = xt.execute_by_line(&test_content);
         // print!("{:#?}", result);
         assert_eq!(result.len(), 2);
 

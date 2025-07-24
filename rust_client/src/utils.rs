@@ -17,8 +17,8 @@ pub struct HwInfo {
 }
 
 impl HwInfo {
-    pub fn new(from:Vec<superxtractor::Match>) -> Option<HwInfo> {
-        let mut out = HwInfo {
+    pub fn new(from:&Vec<superxtractor::Match>) -> Option<Self> {
+        let mut out = Self {
             model: String::from(""),
             hw_uuid: String::from(""),
             chip: String::from(""),
@@ -43,17 +43,6 @@ fn sysprofiler(section: &str) -> Output {
         .expect("Could not run system_profiler");
 }
 
-fn lines_from_output(inp: Vec<u8>) -> Vec<String> {
-    let string_data = String::from_utf8(inp).expect("system_profiler returned non-unicode data :(");
-
-    return str::split(&string_data, "\n").map(|s| s.to_string()).collect();
-    
-    // for part in str::split(&string_data, "\n") {
-    //     out.push(part.to_string());
-    // }
-    // return out.to_owned();
-}
-
 pub fn get_ip_addresses() -> Vec<String> {
     let address_xtractor:regex::Regex = Regex::new(r"(?m)IPv4 Addresses:\s*(.*)$").unwrap();
 
@@ -66,7 +55,7 @@ pub fn get_ip_addresses() -> Vec<String> {
             results.push(path.to_owned());
         }
 
-    return results.clone();
+    return results;
 }
 
 pub fn get_hw_info() -> Option<HwInfo> {
@@ -85,8 +74,8 @@ pub fn get_hw_info() -> Option<HwInfo> {
             return None
         }
         Ok(output)=>{
-            let result = xt.execute_by_line(output);
-            return HwInfo::new(result);
+            let result = xt.execute_by_line(&output);
+            return HwInfo::new(&result);
         }
     }
 }
